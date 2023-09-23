@@ -1,28 +1,32 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { nanoid } from 'nanoid';
 import ContactForm from './ContactForm/ContactForm';
 import Filter from './Filter/Filter';
 import ContactList from './ContactList/ContactList';
-import initialContacts from './initialContacts.json';
 
 const KEY_CONTACTS = 'contacts';
 
 const App = () => {
-  const [contacts, setContacts] = useState(initialContacts);
+  const [contacts, setContacts] = useState(
+    () => JSON.parse(window.localStorage.getItem(KEY_CONTACTS)) ?? []
+  );
   const [filter, setFilter] = useState('');
 
-  const addContact = data => {
-    const isAlreadyExist = contacts.find(el => el.name === data.name);
-    if (isAlreadyExist) return alert(`${data.name} is already in contacts`);
-    console.log('data', contacts);
+  useEffect(() => {
+    localStorage.setItem(KEY_CONTACTS, JSON.stringify(contacts));
+  }, [contacts]);
+
+  const addContact = (name, number) => {
+    const isAlreadyExist = contacts.find(el => el.name === name);
+    if (isAlreadyExist) return alert(`${name} is already in contacts`);
+    // console.log('data', contacts);
     const newUser = {
       id: nanoid(),
-      ...data,
+      name,
+      number,
     };
-    setContacts(prev => [...prev, { newUser, ...prev.contacts }]);
-    // console.log('data', contacts);
+    setContacts(prev => [newUser, ...prev]);
   };
-  // setFeedback(prev => ({ ...prev, bad: prev.bad + 1 }));
 
   const changeFilter = e => {
     setFilter(e.currentTarget.value);
@@ -30,16 +34,15 @@ const App = () => {
 
   const getVisibleContact = () => {
     const normalizedFilter = filter.toLowerCase().trim();
-    return contacts.filter(contact =>
-      contact.name.toLowerCase().includes(normalizedFilter)
-    );
+    if (contacts) {
+      return contacts.filter(contact =>
+        contact.name.toLowerCase().includes(normalizedFilter)
+      );
+    }
   };
 
-  const handleDelete = id => {
-    this.setState(prev => ({
-      contacts: prev.contacts.filter(el => el.id !== id),
-    }));
-  };
+  const handleDelete = id =>
+    setContacts(prev => prev.filter(el => el.id !== id));
 
   return (
     <div>
@@ -54,72 +57,5 @@ const App = () => {
     </div>
   );
 };
+
 export default App;
-// class App extends Component {
-//   state = {
-//     contacts: initialContacts,
-//     filter: '',
-//   };
-
-// componentDidMount(){
-// const localData = localStorage.getItem(KEY_CONTACTS)
-// if(localData && JSON.parse(localData).length) this.setState({contacts: JSON.parse(localData)})
-//   }
-
-// componentDidUpdate(_,prevState){
-// if(prevState.contacts.length !== this.state.contacts.length){
-//   localStorage.setItem(KEY_CONTACTS, JSON.stringify(this.state.contacts))
-// }
-// }
-//   addContact = data => {
-//     const isAlreadyExist = this.state.contacts.find(
-//       el => el.name === data.name
-//     );
-//     if (isAlreadyExist) return alert(`${data.name} is already in contacts`);
-
-//     console.log('data', this.state);
-//     const newUser = {
-//       id: nanoid(),
-//       ...data,
-//     };
-//     this.setState(({ contacts }) => ({
-//       contacts: [newUser, ...contacts],
-//     }));
-//   };
-
-//   changeFilter = e => {
-//     console.log('this.state', this.state);
-//     this.setState({ filter: e.currentTarget.value });
-//   };
-
-//   getVisibleContact = () => {
-//     const { filter, contacts } = this.state;
-//     const normalizedFilter = filter.toLowerCase().trim();
-//     return contacts.filter(contact =>
-//       contact.name.toLowerCase().includes(normalizedFilter)
-//     );
-//   };
-
-//   handleDelete = id => {
-//     this.setState(prev => ({
-//       contacts: prev.contacts.filter(el => el.id !== id),
-//     }));
-//   };
-
-// render() {
-//   return (
-//     <div>
-//       <h1>Phonebook</h1>
-//       <ContactForm addContact={this.addContact} />
-//       <h2>Contacts</h2>
-//       <Filter changeFilter={this.changeFilter} value={this.state.filter} />
-//       <ContactList
-//         userContacts={this.getVisibleContact()}
-//         handleDelete={this.handleDelete}
-//       />
-//     </div>
-//   );
-// }
-// }
-
-// export default App;
